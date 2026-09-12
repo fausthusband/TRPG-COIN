@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>경추와 함께하는 즐거운 TRPG!!!</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0d0d0d;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(25, 25, 25, 0.95);
+            padding: 24px;
+            border-radius: 16px;
+            border: 2px solid #3d3d3d;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(255, 77, 77, 0.1);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #ff3333;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-size: 22px;
+            text-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #cccccc;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background: #1a1a1a;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            font-size: 19px;
+            font-weight: bold;
+            background: linear-gradient(185deg, #cc0000 0%, #800000 100%);
+            color: #ffffff;
+            border: 1px solid #ff6666;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.4);
+            transition: all 0.15s ease;
+            letter-spacing: 1px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+            background: linear-gradient(185deg, #990000 0%, #660000 100%);
+        }
+
+        button:disabled {
+            background: #444;
+            border-color: #666;
+            color: #888;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .coins-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            justify-content: center;
+            margin: 24px 0;
+            min-height: 75px;
+            align-items: center;
+        }
+
+        .coin {
+            width: 70px;
+            height: 70px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .flipping {
+            animation: spin 0.12s infinite linear;
+        }
+
+        @keyframes spin {
+            0% { transform: rotateY(0deg); }
+            50% { transform: rotateY(180deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        /* 최종 위력 표기 영역 */
+        .final-power-container {
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 14px;
+            background: #141414;
+            border-radius: 8px;
+            border: 1px solid #ff3333;
+            color: #ffffff;
+        }
+
+        .power-number {
+            display: inline-block;
+            color: #ff4d4d;
+            font-size: 30px;
+            text-shadow: 0 0 10px rgba(255, 77, 77, 0.6);
+            margin-left: 8px;
+            transition: transform 0.1s ease;
+        }
+
+        /* 위력 증가 시 팝업 애니메이션 */
+        .power-up {
+            animation: popUp 0.15s ease-out;
+        }
+
+        @keyframes popUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.35); color: #ffffaa; }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>TRPG 코인토스</h2>
+    
+    <div class="input-grid">
+        <div class="input-group">
+            <label for="basePower">기본 위력</label>
+            <input type="number" id="basePower" value="10">
+        </div>
+        <div class="input-group">
+            <label for="coinPower">코인 위력</label>
+            <input type="number" id="coinPower" value="4">
+        </div>
+        <div class="input-group full-width">
+            <label for="coinCount">코인 개수 (1~20)</label>
+            <input type="number" id="coinCount" value="4" min="1" max="20">
+        </div>
+    </div>
+
+    <button id="tossBtn" onclick="startCoinToss()">코인 던지기</button>
+
+    <div class="coins-wrapper" id="coinsContainer"></div>
+
+    <div class="final-power-container" id="summary">
+         <span id="finalPower" class="power-number">0</span>
+    </div>
+</div>
+
+<script>
+    const HEADS_IMAGE = 'heads.png'; 
+    const TAILS_IMAGE = 'tails.png';
+    const HEADS_SOUND = 'heads_sound.mp3';
+
+    function playHeadsSound() {
+        const audio = new Audio(HEADS_SOUND);
+        audio.currentTime = 0;
+        audio.play().catch(err => console.log('오디오 재생 경로 확인 필요:', err));
+    }
+
+    async function startCoinToss() {
+        const basePowerInput = document.getElementById('basePower');
+        const coinPowerInput = document.getElementById('coinPower');
+        const countInput = document.getElementById('coinCount');
+
+        const basePower = parseInt(basePowerInput.value) || 0;
+        const coinPower = parseInt(coinPowerInput.value) || 0;
+        const count = parseInt(countInput.value);
+
+        const container = document.getElementById('coinsContainer');
+        const finalPowerEl = document.getElementById('finalPower');
+        const btn = document.getElementById('tossBtn');
+
+        if (isNaN(count) || count < 1 || count > 20) {
+            alert('코인 개수는 1개부터 20개까지 입력할 수 있습니다.');
+            return;
+        }
+
+        btn.disabled = true;
+        container.innerHTML = '';
+        
+        // 코인을 던지기 시작할 때 수치를 '기본 위력'으로 초기화
+        let currentPower = basePower;
+        finalPowerEl.textContent = currentPower;
+
+        const coinElements = [];
+        for (let i = 0; i < count; i++) {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.style.backgroundImage = `url('${TAILS_IMAGE}')`;
+            container.appendChild(coin);
+            coinElements.push(coin);
+        }
+
+        // 코인 순차 던지기
+        for (let i = 0; i < count; i++) {
+            const coin = coinElements[i];
+            
+            coin.classList.add('flipping');
+            await new Promise(resolve => setTimeout(resolve, 220));
+
+            const isHeads = Math.random() < 0.5;
+            coin.classList.remove('flipping');
+
+            if (isHeads) {
+                coin.style.backgroundImage = `url('${HEADS_IMAGE}')`;
+                currentPower += coinPower; // 앞면 발생 시 코인 위력 즉시 가산
+                
+                // 위력 수치 실시간 갱신 & 통하는 연출 효과
+                finalPowerEl.textContent = currentPower;
+                finalPowerEl.classList.remove('power-up');
+                void finalPowerEl.offsetWidth; // 리플로우 강제 수행으로 애니메이션 재트리거
+                finalPowerEl.classList.add('power-up');
+
+                playHeadsSound();
+            } else {
+                coin.style.backgroundImage = `url('${TAILS_IMAGE}')`;
+                // 뒷면일 경우 수치 변화 없이 그대로 유지
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 140));
+        }
+
+        btn.disabled = false;
+    }
+</script>
+
+</body>
+</html>
